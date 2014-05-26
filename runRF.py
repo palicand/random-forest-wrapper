@@ -113,11 +113,10 @@ def run_wrapper(input_file):
     forest = run_induction(implementation, train_uri, train_set, logger)
     if(score_uri is not None):
         run_score(forest, score_uri, score_set, logger)
-        if(data['compute_f1']):
+        if('compute_f1' in data and data['compute_f1']):
             f1_score = compute_f1_score(forest, score_uri, score_set, logger)
-        if(data['compute_cf']):
+        if('compute_cf' in data and data['compute_cf']):
             conf_matrix = compute_conf_matrix(forest, score_uri, score_set, logger)
-
     if(test_uri is not None):
         run_test(forest, test_uri, test_set, logger)
     print('Run for file ' + input_file + ' ended');
