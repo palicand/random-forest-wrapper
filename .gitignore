@@ -14,3 +14,5 @@ fv_swt_cdf97_10_stdev.mat.txt
 result.json
 !*_train.csv
 !*_test.csv
+*.json
+*.data

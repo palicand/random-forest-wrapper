@@ -82,6 +82,7 @@ def run_wrapper(input_file):
     json_data = open(input_file)
     data = json.load(json_data)
     logger = result_log.ResultLog(input_file)
+    result_log.ResultLog.output_dir = data['result'] if 'result' in data else '.'
     forest_conf = forest_config.ForestConfig(data)
     train_set = data['data_sets']['train_set']
     score_set = data['data_sets']['score_set'] if 'score_set' in data['data_sets'] else None
