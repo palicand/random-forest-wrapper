@@ -35,3 +35,9 @@ class ResultLog(object):
         except TypeError:
             unicode_data = unicode(json_data)
             out.write(unicode_data)
+
+    @classmethod
+    def set_output_dir(cls, dirname):
+        cls.output_dir = os.path.abspath(dirname)
+        if not os.path.isdir(dirname):
+            os.mkdir(dirname)
