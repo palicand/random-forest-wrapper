@@ -18,13 +18,13 @@ DEPENDENCIES_FOLDER = 'dependencies/'
 _implementations = {'h2o': h2o.H2OWrapper, 'scikit': scikit_wrapper.SkLearnWrapper}
 
 def compute_conf_matrix(forest, test_set_uri, test_set_config, logger):
-    data_key = forest.wrapper.import_data(test_set_uri, header=test_set_config['header'])
+    data_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
     matrix = forest.confusion_matrix(data_key)
     logger.add_result('conf_matrix', matrix.tolist())
     return matrix
 
 def compute_f1_score(forest, test_set_uri, test_set_config, logger):
-    data_key = forest.wrapper.import_data(test_set_uri, header=test_set_config['header'])
+    data_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
     score = forest.f1_score(data_key)
     logger.add_result('f1_score', score.tolist())
     return score
@@ -42,13 +42,13 @@ def run_induction(implementation, train_set_uri, train_set_config, logger):
     return forest
 
 def run_score(forest, test_set_uri, test_set_config, logger):
-    test_key = forest.wrapper.import_data(test_set_uri, header=test_set_config['header'])
+    test_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
     scores = forest.score(test_key)
     logger.add_result('score', (test_set_uri, forest.forest_config.trees, scores))
     return scores
 
 def run_test(forest, test_set_uri, test_set_config, logger):
-    test_key = forest.wrapper.import_data(test_set_uri, header=test_set_config['header'])
+    test_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
     predicted_values = forest.predict(test_key)
     logger.add_result('predicted', (test_set_uri, forest.forest_config.trees, predicted_values))
 
@@ -61,7 +61,7 @@ def run_xvalidation(configuration, implementation, original_data_uri, train_set_
     forest = None
     try:
         xval = implementation.xvalidation
-        key = implementation.import_data(original_data_uri, header=train_set_config['header'])
+        key = implementation.import_data(original_data_uri, header=False if test_set_config is None else test_set_config['header'])
         result = implementation.xvalidation(n_folds, key)
     except(AttributeError, TypeError):
         if(not run_xvalidation.files_generated):
