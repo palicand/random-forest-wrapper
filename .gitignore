@@ -16,3 +16,6 @@ result.json
 !*_test.csv
 *.json
 *.data
+*.csv
+result
+test_html_output.py

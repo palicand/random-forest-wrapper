@@ -3,36 +3,46 @@ import sys
 import h2o
 import forest_config
 import data_set_handler
-import time
 import scikit_wrapper
 import numpy as np
-import io
-import os
 import result_log
-from pprint import pprint
+import html_output
 from datetime import datetime
 
 BIN_FOLDER = 'bin/'
 DEPENDENCIES_FOLDER = 'dependencies/'
 
-_implementations = {'h2o': h2o.H2OWrapper, 'scikit': scikit_wrapper.SkLearnWrapper}
+IMPLEMENTATIONS = {'h2o': h2o.H2OWrapper,
+                   'scikit': scikit_wrapper.SkLearnWrapper}
+
+__data_sets = {}
 
 def compute_conf_matrix(forest, test_set_uri, test_set_config, logger):
-    data_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
+    '''Computes confusion matrix.
+    Input is a forest object,
+    uri to the test set
+    and its config and and a logger'''
+    data_key = forest.wrapper.import_data(test_set_uri,
+                                          header=False if
+                                          test_set_config is None
+                                          else test_set_config['header'])
     matrix = forest.confusion_matrix(data_key)
-    logger.add_result('conf_matrix', matrix.tolist())
+    for value in matrix:
+        logger.add_result('conf_matrix', value)
     return matrix
 
 def compute_f1_score(forest, test_set_uri, test_set_config, logger):
     data_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
     score = forest.f1_score(data_key)
-    logger.add_result('f1_score', score.tolist())
+    for value in score:
+        logger.add_result('f1_score', value)
     return score
 
 
 def run_induction(implementation, train_set_uri, train_set_config, logger):
     start = datetime.utcnow()
-    key = implementation.import_data(train_set_uri, header=train_set_config['header'])
+    key = implementation.import_data(train_set_uri,
+                                     header=train_set_config['header'])
     forest = implementation.train_forest(key)
     end = datetime.utcnow()
     trees, matrix = forest.oob_score()
@@ -42,16 +52,21 @@ def run_induction(implementation, train_set_uri, train_set_config, logger):
     return forest
 
 def run_score(forest, test_set_uri, test_set_config, logger):
-    test_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
+    test_key = forest.wrapper.import_data(test_set_uri,
+                                          header=False
+                                          if test_set_config is None
+                                          else test_set_config['header'])
     scores = forest.score(test_key)
-    logger.add_result('score', (test_set_uri, forest.forest_config.trees, scores))
+    logger.add_result('score',
+                     {'test_set_uri': (forest.forest_config.trees, scores)})
     return scores
 
 def run_test(forest, test_set_uri, test_set_config, logger):
     test_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
-    predicted_values = forest.predict(test_key)
-    logger.add_result('predicted', (test_set_uri, forest.forest_config.trees, predicted_values))
-
+    predicted_values = forest.predict(test_key).tolist()
+    #logger.add_result('predicted', (test_set_uri, forest.forest_config.trees, predicted_values.tolist()))
+    for score in predicted_values:
+        logger.add_result('predicted/test', score)
     return predicted_values
 
 def run_xvalidation(configuration, implementation, original_data_uri, train_set_config, logger, label=None,):
@@ -64,9 +79,9 @@ def run_xvalidation(configuration, implementation, original_data_uri, train_set_
         key = implementation.import_data(original_data_uri, header=False if test_set_config is None else test_set_config['header'])
         result = implementation.xvalidation(n_folds, key)
     except(AttributeError, TypeError):
-        if(not run_xvalidation.files_generated):
+        if not run_xvalidation.files_generated:
             xvalidation_uris = data_set_handler.create_xvalidation_files(original_data_uri, 
-                       train_set_config, configuration, target=label, base_folder='./xval')
+                                train_set_config, configuration, target=label, base_folder='./xval')
             run_xvalidation.xvalidation_uris = xvalidation_uris
             run_xvalidation.files_generated = True
         xvalidation_uris = run_xvalidation.xvalidation_uris
@@ -88,8 +103,8 @@ def run_wrapper(input_file):
     score_set = data['data_sets']['score_set'] if 'score_set' in data['data_sets'] else None
     test_set = data['data_sets']['test_set'] if 'test_set' in data['data_sets'] else None
     train_uri = data_set_handler.process_set(train_set['path'], data['name'],
-                                       format=train_set['file_type'],
-                                       binning=train_set['binning'])
+                                             format=train_set['file_type'],
+                                             binning=train_set['binning'])
     test_uri = None
     score_uri = None
 
@@ -102,28 +117,33 @@ def run_wrapper(input_file):
                                            format=test_set['file_type'])
 
     elif 'create_test_set' in data and data['create_test_set']:
-        train_uri, score_uri = data_set_handler.split_train_set(train_uri, data['test_set_ratio'], header=train_set['header'])
+        train_uri, score_uri = data_set_handler.split_train_set(train_uri,
+                                                                data['test_set_ratio'],
+                                                                header=train_set['header'])
+    __data_sets[input_file.replace('.json','')] = {'train_set': data_set_handler.load_set(train_uri, header=train_set['header']),
+                               'score_set': data_set_handler.load_set(score_uri, header=score_set['header']),
+                               'test_set': data_set_handler.load_set(test_uri, header=test_set['header'])}
 
-    implementation_cls = _implementations[forest_conf.implementation]
+    implementation_cls = IMPLEMENTATIONS[forest_conf.implementation]
     implementation = implementation_cls(forest_conf)
     x_validation_params = data['x-validation'] if 'x-validation' in data else None
-    if(x_validation_params is not None):
+    if x_validation_params is not None:
         xvalidation_precision = run_xvalidation(x_validation_params, implementation, train_uri, train_set, logger, label=forest_conf.label)
         logger.add_result('xvalidation_precision', (forest_conf.trees, xvalidation_precision))
 
     forest = run_induction(implementation, train_uri, train_set, logger)
-    if(score_uri is not None):
+    if score_uri is not None:
         run_score(forest, score_uri, score_set, logger)
-        if('compute_f1' in data and data['compute_f1']):
-            f1_score = compute_f1_score(forest, score_uri, score_set, logger)
-        if('compute_cf' in data and data['compute_cf']):
-            conf_matrix = compute_conf_matrix(forest, score_uri, score_set, logger)
-    if(test_uri is not None):
+        if 'compute_f1' in data and data['compute_f1']:
+            compute_f1_score(forest, score_uri, score_set, logger)
+        if 'compute_cf' in data and data['compute_cf']:
+            compute_conf_matrix(forest, score_uri, score_set, logger)
+    if test_uri is not None:
         run_test(forest, test_uri, test_set, logger)
     print('Run for file ' + input_file + ' ended');
 
 run_xvalidation.files_generated = False
-if(len(sys.argv) < 2):
+if len(sys.argv) < 2:
     print('You need to specify at least one input file!')
     sys.exit(1)
 
@@ -132,3 +152,7 @@ for arg in sys.argv[1:]:
     run_wrapper(arg)
 
 result_log.ResultLog.write_result('result.json')
+
+html_output.output_to_html(result_log.ResultLog.out_data,
+                           data_sets=__data_sets,
+                           out_dir=result_log.ResultLog.output_dir)
