@@ -45,12 +45,12 @@ class SkLearnForest(base_wrapper.BaseForest):
     def f1_score(self, data_key):
         predicted = self.predict(data_key)
         data = self.wrapper.data[data_key]
-        return met.f1_score(data[self.forest_config.label], predicted, average=None)
+        return met.f1_score(data[self.forest_config.label], predicted, average=None).tolist()
 
     def confusion_matrix(self, data_key):
         predicted = self.predict(data_key)
         data = self.wrapper.data[data_key]
-        return met.confusion_matrix(data[self.forest_config.label], predicted)
+        return met.confusion_matrix(data[self.forest_config.label], predicted).tolist()
 
 
 class SkLearnWrapper(base_wrapper.BaseWrapper):
@@ -83,12 +83,14 @@ class SkLearnWrapper(base_wrapper.BaseWrapper):
 
     def import_data(self, uri, header=0, config=None):
         key = os.path.basename(uri)
+        print("header " + str(header))
         if key not in SkLearnWrapper.data:
             SkLearnWrapper.data[key] = pd.read_csv(uri, header=0 if header else None, sep=None, dtype=None, na_values='?', skipinitialspace=True)
         return key
 
     def train_forest(self, data_key):
         data_set = SkLearnWrapper.data[data_key]
+        pprint(data_set)
         target = data_set[self.config.label].values
         pprint(target)
         columns = [column for column in data_set.columns if column not in self.config.ignore and column != self.config.label]

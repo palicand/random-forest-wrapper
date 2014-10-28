@@ -20,6 +20,9 @@ def process_set(uris, name, format='csv', normalize=True, binning=True, delimite
         _write_fits_csv(all_fits, csv_name)
         return csv_name
 
+def load_set(uri, format='csv', header=False, delimiter=','):
+    return pd.read_csv(uri, header=0 if header else None, sep=None, dtype=None, na_values='?', skipinitialspace=True)
+
 
 def _binning(fits_list):
     '''do data binning'''
