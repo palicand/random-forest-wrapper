@@ -101,9 +101,9 @@ def _parse_all_fits(uri):
     for root, dirs, files in os.walk(uri):
         base = os.path.basename(root)
         #print(base)
-        if(root == uri):
+        if root == uri:
             classes = dirs
-        elif(base in classes):
+        elif base in classes:
             current_class = base
         for fi in files:
             if(fi.endswith('.fits')):

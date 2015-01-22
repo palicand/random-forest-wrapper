@@ -4,11 +4,12 @@ import os
 __DIV_TEMPLATE = string.Template('<div id="conf_matrix_${key}" style="height: 400px; min-width: 310px; max-width: 800px; margin: 0 auto"></div>\n')
 __LINK_TEMPLATE = string.Template('<li><a id="${spectrum_name}_link" href="./spectra/spectrum_${spectrum_name}.html">${spectrum_name_short} as ${class}</a></li>\n')
 __LINK_SECTION_TEMPLATE = string.Template('<section id="${key"}><h2>${key}</h2>\n${spectra_links}</section>')
+__script_dir = os.path.dirname(os.path.realpath(__file__))
 def output_to_html(data, data_sets=None, out_dir='./'):
     substitutes = {'f1_score': '', 'cat_names': '', 'conf_matrix_code':'', 'conf_matrix_div':'', 'n_trees':'', 'score':'', 'classified_data':''}
     html_template = ''
     div_template = ''
-    with open('index.html.template') as template:
+    with open(__script_dir + '/index.html.template') as template:
         html_template = string.Template(template.read())
     f1_data = []
     conf_matrix_data = {}
@@ -47,7 +48,7 @@ def __generate_classified_data(data, data_sets, out_dir):
     html_code_template = ''
     links = []
     pages = {}
-    with open('spectra_plot.template.html') as template_file:
+    with open(__script_dir + '/spectra_plot.html.template') as template_file:
         html_code_template = string.Template(template_file.read())
     res = ''
     for key, predicted in data.items():
@@ -75,7 +76,7 @@ def __generate_conf_matrix_div(keys):
 def __generate_conf_matrix_code(data, cat_names):
     '''Generates javascript code out of provided data'''
     code_template = ''
-    with open('conf_matrix_code.js.template') as template_file:
+    with open(__script_dir + '/conf_matrix_code.js.template') as template_file:
         code_template = string.Template(template_file.read())
     conf_matrix_codes = []
     for key, val in data.items():

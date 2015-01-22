@@ -19,3 +19,4 @@ result.json
 *.csv
 result
 test_html_output.py
+.idea/

@@ -12,6 +12,11 @@
     $$(function() {
 $$('#plot').highcharts({
 
+        plotOptions: {
+            line: {
+                animation: false
+            }
+        },
         chart: {
             zoomType: 'x'
         },
@@ -20,7 +25,8 @@ $$('#plot').highcharts({
             x: -20 //center
         },
             xAxis: {
-                categories: ${cats}
+                categories: ${cats},
+                tickInterval: 50
             },
             yAxis: {
                 title: {

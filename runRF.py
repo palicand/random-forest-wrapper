@@ -142,17 +142,22 @@ def run_wrapper(input_file):
         run_test(forest, test_uri, test_set, logger)
     print('Run for file ' + input_file + ' ended');
 
-run_xvalidation.files_generated = False
-if len(sys.argv) < 2:
-    print('You need to specify at least one input file!')
-    sys.exit(1)
 
-for arg in sys.argv[1:]:
-    print('Running for input file ' + arg)
-    run_wrapper(arg)
+def main():
+    run_xvalidation.files_generated = False
+    if len(sys.argv) < 2:
+        print('You need to specify at least one input file!')
+        sys.exit(1)
 
-result_log.ResultLog.write_result('result.json')
+    for arg in sys.argv[1:]:
+        print('Running for input file ' + arg)
+        run_wrapper(arg)
 
-html_output.output_to_html(result_log.ResultLog.out_data,
-                           data_sets=__data_sets,
-                           out_dir=result_log.ResultLog.output_dir)
+    result_log.ResultLog.write_result('result.json')
+
+    html_output.output_to_html(result_log.ResultLog.out_data,
+                               data_sets=__data_sets,
+                               out_dir=result_log.ResultLog.output_dir)
+
+if __name__ == '__main__':
+    main()
