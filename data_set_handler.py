@@ -21,6 +21,7 @@ def process_set(uris, name, format='csv', normalize=True, binning=True, delimite
         return csv_name
 
 def load_set(uri, format='csv', header=False, delimiter=','):
+    print(str(header))
     return pd.read_csv(uri, header=0 if header else None, sep=None, dtype=None, na_values='?', skipinitialspace=True)
 
 
@@ -164,7 +165,7 @@ def split_train_set(uri, label=-1, ratio=0.67, sep=',', header=True):
     base_name, ext = os.path.splitext(os.path.basename(uri))
     directory = os.path.dirname(uri)
     train_name = directory + base_name + '_train' + ext
-    test_name = directory + base_name + '_test' + ext
+    test_name = directory + base_name + '_score' + ext
     _write_csv(train, train_name, separator=sep, header=None if not header else array.columns)
     _write_csv(test, test_name, separator=sep, header=None if not header else array.columns)
     return (train_name, test_name)
