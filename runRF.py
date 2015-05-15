@@ -119,11 +119,14 @@ def run_wrapper(input_file):
         train_uri, score_uri = data_set_handler.split_train_set(train_uri,
                                                                 data['test_set_ratio'],
                                                                 header=train_set['header'])
+    score_set_header = True if score_set is None or score_set['header'] is None else score_set['header']
+    test_set_header = True if test_set is None or test_set['header'] is None else test_set['header']
+
     __data_sets[input_file.replace('.json','')] = {'train_set': data_set_handler.load_set(train_uri, header=train_set['header']),
                                'score_set': data_set_handler.load_set(score_uri,
-                                header=score_set['header'] if score_set['header'] is not None else True),
+                                header=score_set_header),
                                'test_set': data_set_handler.load_set(test_uri,
-                                header=test_set['header'] if test_set['header'] is not None else True)}
+                                header=score_set_header)}
 
     implementation_cls = IMPLEMENTATIONS[forest_conf.implementation]
     implementation = implementation_cls(forest_conf)
