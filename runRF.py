@@ -53,7 +53,7 @@ def run_induction(implementation, train_set_uri, train_set_config, logger):
 
 def run_score(forest, test_set_uri, test_set_config, logger):
     test_key = forest.wrapper.import_data(test_set_uri,
-                                          header=False
+                                          header=True
                                           if test_set_config is None
                                           else test_set_config['header'])
     scores = forest.score(test_key)
@@ -62,7 +62,7 @@ def run_score(forest, test_set_uri, test_set_config, logger):
     return scores
 
 def run_test(forest, test_set_uri, test_set_config, logger):
-    test_key = forest.wrapper.import_data(test_set_uri, header=False if test_set_config is None else test_set_config['header'])
+    test_key = forest.wrapper.import_data(test_set_uri, header=True if test_set_config is None else test_set_config['header'])
     predicted_values = forest.predict(test_key).tolist()
     #logger.add_result('predicted', (test_set_uri, forest.forest_config.trees, predicted_values.tolist()))
     for score in predicted_values:
@@ -103,8 +103,7 @@ def run_wrapper(input_file):
     score_set = data['data_sets']['score_set'] if 'score_set' in data['data_sets'] else None
     test_set = data['data_sets']['test_set'] if 'test_set' in data['data_sets'] else None
     train_uri = data_set_handler.process_set(train_set['path'], data['name'],
-                                             format=train_set['file_type'],
-                                             binning=train_set['binning'])
+                                             format=train_set['file_type'])
     test_uri = None
     score_uri = None
 
@@ -121,8 +120,10 @@ def run_wrapper(input_file):
                                                                 data['test_set_ratio'],
                                                                 header=train_set['header'])
     __data_sets[input_file.replace('.json','')] = {'train_set': data_set_handler.load_set(train_uri, header=train_set['header']),
-                               'score_set': data_set_handler.load_set(score_uri, header=score_set['header']),
-                               'test_set': data_set_handler.load_set(test_uri, header=test_set['header'])}
+                               'score_set': data_set_handler.load_set(score_uri,
+                                header=score_set['header'] if score_set['header'] is not None else True),
+                               'test_set': data_set_handler.load_set(test_uri,
+                                header=test_set['header'] if test_set['header'] is not None else True)}
 
     implementation_cls = IMPLEMENTATIONS[forest_conf.implementation]
     implementation = implementation_cls(forest_conf)
